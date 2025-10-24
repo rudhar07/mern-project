@@ -47,6 +47,8 @@ const HomePage = () => {
     if (searchQuery.trim()) {
       // Navigate to restaurants page with search query (client-side, avoid full page reload)
       navigate(`/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
+      // clear the input like Navbar does to keep behavior consistent
+      setSearchQuery('');
     }
   };
 
