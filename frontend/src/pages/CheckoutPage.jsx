@@ -84,21 +84,60 @@ const CheckoutPage = () => {
     
     try {
       // Create order with payment data
+      // Map frontend payment method values to backend expected enums
+      const mapPaymentMethod = (method) => {
+        switch (method) {
+          case 'card': return 'card';
+          case 'cod': return 'cash';
+          case 'wallet': return 'digital_wallet';
+          case 'upi': return 'digital_wallet';
+          default: return 'card';
+        }
+      };
+
+      const paymentPayload = {
+        method: mapPaymentMethod(paymentData.method),
+        amount: paymentData.amount,
+        transactionId: paymentData.transactionId,
+        timestamp: paymentData.timestamp,
+        // mark paid for online methods, leave pending for cash
+        status: paymentData.method === 'cod' ? 'pending' : 'paid'
+      };
+
       const orderData = {
         items: items.map(item => ({
-          menuItem: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
+          menuItem: item.menuItem?.id || item.menuItem?._id || item.menuItem,
+          name: item.menuItem?.name || item.name,
+          price: item.menuItem?.price || item.price,
+          quantity: item.quantity,
+          specialInstructions: (item.customizations && item.customizations.length) ? JSON.stringify(item.customizations) : ''
         })),
-        deliveryAddress: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-        deliveryInstructions: formData.deliveryInstructions,
-        payment: paymentData,
-        subtotal: totalPrice,
-        deliveryFee: deliveryFee,
-        tax: tax,
-        total: finalTotal
+        restaurant: items.length > 0 ? (
+          items[0].menuItem?.restaurantId || items[0].menuItem?.restaurant || items[0].restaurantId || items[0].restaurant
+        ) : undefined,
+        deliveryAddress: {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          instructions: formData.deliveryInstructions
+        },
+        pricing: {
+          subtotal: totalPrice,
+          deliveryFee: deliveryFee,
+          tax: tax,
+          tip: 0,
+          total: finalTotal
+        },
+        payment: paymentPayload
       };
+
+      // Ensure restaurant is present (backend requires it)
+      if (!orderData.restaurant) {
+        toast.error('Restaurant information missing from cart. Please add items from a restaurant and try again.');
+        setLoading(false);
+        return;
+      }
 
       const response = await api.post('/orders', orderData);
       
