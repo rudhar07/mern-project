@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   MagnifyingGlassIcon,
@@ -21,6 +21,7 @@ const HomePage = () => {
   const [location, setLocation] = useState('');
   const [favorites, setFavorites] = useState(new Set());
   const [currentTime, setCurrentTime] = useState(new Date());
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,8 +45,8 @@ const HomePage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to restaurants page with search query
-      window.location.href = `/restaurants?search=${encodeURIComponent(searchQuery.trim())}`;
+      // Navigate to restaurants page with search query (client-side, avoid full page reload)
+      navigate(`/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
