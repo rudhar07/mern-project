@@ -161,7 +161,9 @@ const RestaurantDetailPage = () => {
     addItemWithToast({
       menuItem,
       quantity: 1,
-      customizations: []
+      customizations: [],
+      // persist restaurant id so checkout can include required restaurant field
+      restaurantId: restaurant?.id || restaurant?._id
     });
     
     // Show toast after state update
